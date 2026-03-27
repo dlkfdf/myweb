@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>새종로약국 · 마운자로 예약 현황</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f2f4f8;
+    color: #1a1a2e;
+    min-height: 100vh;
+    padding-bottom: 48px;
+  }
+
+  /* HEADER */
+  .header {
+    background: #fff;
+    border-bottom: 1px solid #e8eaf0;
+    padding: 14px 20px;
+    display: flex; 
+    align-items: center; 
+    gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+  }
+  
+ 
+  .header-icon {
+    width: 44px; height: 44px;
+    background: #f0f0f0;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .header-name { font-size: 16px; font-weight: 700; color: #4a6cf7; }
+  .header-sub  { font-size: 12px; color: #9a9aaa; margin-top: 1px; }
+
+  /* CONTAINER */
+  .container { max-width: 500px; margin: 0 auto; padding: 20px 16px; }
+
+  /* CARD */
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 15px; font-weight: 700;
+    margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .live-badge {
+    font-size: 11px; font-weight: 600; color: #22c97a;
+    background: #edfdf5; padding: 3px 9px; border-radius: 20px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .live-dot {
+    width: 6px; height: 6px; background: #22c97a; border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+  /* DOSE GRID */
+  .dose-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .dose-card {
+    border-radius: 12px;
+    padding: 14px;
+    border: 1.5px solid #eee;
+    background: #fafafa;
+    position: relative;
+    overflow: hidden;
+  }
+  .dose-card.has-stock {
+    border-color: #22c97a;
+    background: linear-gradient(135deg, #edfdf5, #f6fff9);
+  }
+
+  /* top bar accent */
+  .dose-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--dose-color, #ccc);
+    border-radius: 12px 12px 0 0;
+  }
+
+  .dose-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .dose-badge {
+    font-size: 12px; font-weight: 700;
+    padding: 3px 9px; border-radius: 20px;
+    color: var(--dose-color); background: var(--dose-bg);
+  }
+  .dose-price {
+    font-size: 12px; color: #888; font-weight: 500;
+  }
+  .dose-price b { color: #333; font-weight: 700; }
+
+  .dose-num {
+    font-size: 30px; font-weight: 800;
+    color: #ccc; line-height: 1;
+  }
+  .dose-num.active { color: #1a1a2e; }
+  .dose-sub { font-size: 12px; color: #888; margin-top: 3px; }
+
+ .dose-info {
+   display: flex;
+   align-items: baseline; /* 큰 숫자와 작은 글자의 아래쪽 선을 딱 맞춰줍니다 */
+   gap: 4px; /* 숫자와 글자 사이의 간격 */
+   margin-top: 4px;
+ }
+
+  .stock-label {
+    font-size: 13px; font-weight: 700; color: #22c97a;
+  }
+  .stock-count { font-size: 12px; color: #666; margin-top: 2px; }
+
+  .dose-bar {
+    height: 2px; background: #eee; border-radius: 2px; margin-top: 12px; overflow: hidden;
+  }
+  .dose-bar-fill {
+    height: 100%; border-radius: 2px;
+    transition: width 0.8s ease;
+    background: var(--dose-color, #ccc);
+  }
+
+  /* NOTICE */
+  .notice {
+    margin-top: 14px;
+    background: #fffbf0; border: 1px solid #f0e0b0;
+    border-radius: 10px; padding: 11px 14px;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .notice p { font-size: 12px; color: #7a6a3a; line-height: 1.6; }
+
+  /* INQUIRY */
+  .inq-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+
+  .f-label {
+    font-size: 12px; font-weight: 600; color: #666;
+    display: block; margin-bottom: 6px;
+  }
+  .f-input {
+    width: 100%;
+    height: 48px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 0 14px;
+    font-size: 15px; font-family: inherit;
+    color: #1a1a2e;
+    background: #fafafa;
+    outline: none;
+    margin-bottom: 14px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .f-input:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 3px rgba(74,108,247,0.1);
+    background: #fff;
+  }
+  .f-input::placeholder { color: #bbb; }
+
+  .btn-search {
+    width: 100%; height: 50px;
+    background: #4a6cf7; color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 700; font-family: inherit;
+    cursor: pointer;
+    transition: background .2s, transform .15s;
+    margin-top: 2px;
+  }
+  .btn-search:hover  { background: #3658e0; }
+  .btn-search:active { transform: scale(0.99); }
+  .btn-search:disabled { opacity: .5; cursor: not-allowed; }
+
+  .err-msg { font-size: 12px; color: #e05050; margin: -8px 0 12px 2px; display: none; }
+  .err-msg.show { display: block; }
+
+  /* RESULT */
+  .result-area { margin-top: 14px; display: none; animation: fadeUp .3s ease; }
+  .result-area.show { display: block; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+
+  .r-empty {
+    text-align: center; padding: 24px;
+    background: #fff5f5; border: 1.5px solid #ffd5d5; border-radius: 12px;
+  }
+  .r-empty .ico { font-size: 28px; margin-bottom: 8px; }
+  .r-empty h3 { font-size: 14px; font-weight: 700; color: #e05050; margin-bottom: 4px; }
+  .r-empty p  { font-size: 12px; color: #888; line-height: 1.6; }
+
+  .r-card {
+    border: 1.5px solid #e8eaf0; border-radius: 12px; overflow: hidden;
+  }
+  .r-head {
+    background: #f8f9ff; padding: 12px 16px;
+    border-bottom: 1px solid #e8eaf0;
+  }
+  .r-num  { font-size: 11px; color: #aaa; letter-spacing: 1px; }
+  .r-name { font-size: 15px; font-weight: 700; margin-top: 2px; }
+  .r-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 16px; border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+  }
+  .r-row:last-child { border-bottom: none; }
+  .r-key { color: #888; }
+  .r-val { font-weight: 600; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;
+  }
+  .pill-ready   { background: #edfdf5; color: #22c97a; }
+  .pill-waiting { background: #fff8ec; color: #e09000; }
+
+  /* LOADING */
+  .loading-cover {
+    position: fixed; inset: 0;
+    background: rgba(242,244,248,.7); backdrop-filter: blur(3px);
+    display: none; align-items: center; justify-content: center; z-index: 999;
+  }
+  .loading-cover.show { display: flex; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid #e0e0e0; border-top-color: #4a6cf7;
+    border-radius: 50%; animation: spin .65s linear infinite;
+  }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  .footer {
+    text-align: center; font-size: 11px; color: #bbb;
+    line-height: 1.8; padding-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-cover" id="loadingCover"><div class="spinner"></div></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-icon">💊</div>
+  <div>
+    <div class="header-name">새종로약국</div>
+    <div class="header-sub">마운자로 예약 현황 안내</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 실시간 대기 현황 -->
+  <div class="card">
+    <div class="card-title">
+      실시간 대기 현황
+      <span class="live-badge"><span class="live-dot"></span><span id="updateTime">방금 업데이트</span></span>
+    </div>
+
+    <div class="dose-grid" id="doseGrid"></div>
+
+    <div class="notice">
+      <span>📩</span>
+      <p>재고 입고 시 예약하신 번호로 안내 문자를 보내드립니다.<br>예약 후 오랜 시간이 지났는데도 문자가 오지 않을 경우 스팸 문자함을 확인해 주세요.</p>
+    </div>
+  </div>
+
+  <!-- 예약 내역 조회 -->
+  <div class="card">
+    <div class="inq-title">예약 내역 조회</div>
+
+    <label class="f-label" for="userName">이름</label>
+    <input class="f-input" type="text" id="userName" placeholder="홍길동">
+
+    <label class="f-label" for="reservationId">예약번호</label>
+    <input class="f-input" type="text" id="reservationId" placeholder="0000" maxlength="10" inputmode="numeric">
+
+    <label class="f-label" for="phoneDigits">휴대폰 뒷 4자리</label>
+    <input class="f-input" type="text" id="phoneDigits" placeholder="1234" maxlength="4" inputmode="numeric">
+
+    <p class="err-msg" id="errMsg"></p>
+    <button class="btn-search" id="btnSearch" onclick="doInquiry()">조회하기</button>
+    <div class="result-area" id="resultArea"></div>
+  </div>
+
+  <div class="footer">
+    본 페이지는 예약 현황 안내용으로만 운영됩니다.<br>
+    문의: 02-3672-8558 · 서울특별시 종로구 종로 199-2 새종로약국
+  </div>
+</div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzEflte-dZ__x9Ne9eTpN-laZSx9oqgzsxplrhsKEWvEGR0d9xG4jN4lPOLOERzvLme/exec'; // 💡새로 배포한 주소가 있다면 이걸로 꼭 바꿔주세요!
+
+const DOSES = [
+  { id:'2.5', label:'2.5mg', price:29, color:'#8a8a8a', bg:'#f0f0f0' },
+  { id:'5.0', label:'5.0mg', price:38, color:'#7c5cbf', bg:'#f0eafa' },
+  { id:'7.5', label:'7.5mg', price:53, color:'#1fa090', bg:'#e4f5f3' },
+  { id:'10',  label:'10mg',  price:53, color:'#d9547a', bg:'#fceef3' },
+];
+
+let statusData = {
+  '2.5':{ waiting:0, stock:0 },
+  '5.0':{ waiting:0, stock:0 },
+  '7.5':{ waiting:0, stock:0 },
+  '10': { waiting:0, stock:0 },
+};
+
+// 1. 대기 현황 카드 그리기
+function renderDoseGrid(data) {
+  const grid = document.getElementById('doseGrid');
+  grid.innerHTML = '';
+  DOSES.forEach(dose => {
+    const d = data[dose.id] || { waiting:0, stock:0 };
+    const hasStock   = d.stock > 0;
+    const hasWaiting = d.waiting > 0;
+
+    let body = '', bar = '', cardExtra = '';
+
+    if (hasStock) {
+      cardExtra = ' has-stock';
+      body = `
+        <div class="dose-info">
+          <span class="dose-num active" style="color:#22c97a;">${d.stock}</span>
+          <span class="dose-sub" style="color:#22c97a; font-weight:600;">개 수령 가능</span>
+        </div>`;
+      bar = `<div class="dose-bar"><div class="dose-bar-fill" style="width:100%;background:#22c97a"></div></div>`;
+    } else if (hasWaiting) {
+      body = `
+        <div class="dose-info">
+          <span class="dose-num active">${d.waiting}</span>
+          <span class="dose-sub">명 대기 중</span>
+        </div>`;
+      const pct = Math.min(d.waiting * 12, 100);
+      bar = `<div class="dose-bar"><div class="dose-bar-fill" style="width:${pct}%"></div></div>`;
+    } else {
+      body = `
+        <div class="dose-info">
+          <span class="dose-num">0</span>
+          <span class="dose-sub">명 대기 중</span>
+        </div>`;
+      bar = `<div class="dose-bar"><div class="dose-bar-fill" style="width:0%"></div></div>`;
+    }
+
+    grid.innerHTML += `
+      <div class="dose-card${cardExtra}" style="--dose-color:${dose.color};--dose-bg:${dose.bg}">
+        <div class="dose-top">
+          <span class="dose-badge">${dose.label}</span>
+          <span class="dose-price"><b>${dose.price}</b>만원</span>
+        </div>
+        ${body}
+        ${bar}
+      </div>`;
+  });
+}
+
+// 2. 서버에서 실시간 현황 불러오기 (+ 체감 속도 향상 캐시 기능)
+async function fetchStatus() {
+  // ⭐️ [캐시 마법 1] 브라우저에 저장된 이전 데이터가 있으면 0.1초 만에 화면에 짠!
+  const savedData = localStorage.getItem('pharmacy_status_cache');
+  const savedTime = localStorage.getItem('pharmacy_time_cache');
+  
+  if (savedData) {
+    statusData = JSON.parse(savedData);
+    renderDoseGrid(statusData); // 옛날 데이터로 일단 화면 그리기 (하얀 화면 방지)
+    
+    // 시간도 옛날 시간으로 일단 표시
+    const timeEl = document.getElementById('updateTime');
+    if (timeEl && savedTime) {
+      timeEl.textContent = `${savedTime} 업데이트`;
+    }
+  }
+
+  // ⭐️ [캐시 마법 2] 화면은 띄워놓고, 뒤에서 몰래 구글 서버에 최신 데이터 요청
+  try {
+    const res  = await fetch(GAS_URL + '?action=getStatus', { mode:'cors' });
+    const json = await res.json();
+    
+    if (json.status === 'ok') {
+      statusData = json.data;
+      
+      // ⭐️ [캐시 마법 3] 방금 도착한 따끈따끈한 최신 데이터를 다음번 접속을 위해 스마트폰 메모장에 저장
+      localStorage.setItem('pharmacy_status_cache', JSON.stringify(statusData));
+      
+      const timeEl = document.getElementById('updateTime');
+      if (timeEl && json.updateTime) {
+        timeEl.textContent = `${json.updateTime} 업데이트`;
+        localStorage.setItem('pharmacy_time_cache', json.updateTime); // 시간도 저장
+      }
+      
+      // ⭐️ [캐시 마법 4] 화면을 최신 데이터로 스르륵 업데이트!
+      renderDoseGrid(statusData);
+    }
+  } catch(e) {
+    console.log('상태 업데이트 실패', e);
+  }
+}
+
+// 3. 예약 조회 요청하기
+async function doInquiry() {
+  // ⭐️ 1. HTML에서 이름 값 가져오기 (추가됨)
+  const name  = document.getElementById('userName').value.trim();
+  const rid   = document.getElementById('reservationId').value.trim();
+  const phone = document.getElementById('phoneDigits').value.trim();
+  const errEl = document.getElementById('errMsg');
+  const area  = document.getElementById('resultArea');
+
+  errEl.classList.remove('show');
+  area.classList.remove('show');
+
+  // ⭐️ 2. 빈칸 검사 (화면 순서에 맞게 이름 -> 예약번호 -> 휴대폰 순으로 검사)
+  if (!name)          { errEl.textContent='이름을 입력해주세요.'; errEl.classList.add('show'); return; }
+  if (!rid)           { errEl.textContent='예약번호를 입력해주세요.'; errEl.classList.add('show'); return; }
+  if (phone.length<4) { errEl.textContent='휴대폰 뒷 4자리를 입력해주세요.'; errEl.classList.add('show'); return; }
+
+  document.getElementById('loadingCover').classList.add('show');
+  document.getElementById('btnSearch').disabled = true;
+
+  try {
+    // ⭐️ 3. 가장 중요한 부분! URL에 &name=... 을 추가해서 서버로 이름 전송!
+    const res  = await fetch(`${GAS_URL}?action=getReservation&id=${encodeURIComponent(rid)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`, {mode:'cors'});
+    const json = await res.json();
+    
+    renderResult(json, rid); 
+    
+  } catch(e) {
+    errEl.textContent='서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    errEl.classList.add('show');
+  } finally {
+    document.getElementById('loadingCover').classList.remove('show');
+    document.getElementById('btnSearch').disabled = false;
+  }
+}
+
+// 4. 예약 조회 결과 화면 그리기 (중복 제거된 최종본)
+// (이 부분은 기존에 작성하신 renderResult 함수 그대로 두시면 됩니다!)
+function renderResult(json, rid) {
+  const area = document.getElementById('resultArea');
+  if (!json || json.found === false) {
+    area.innerHTML = `
+      <div class="r-empty">
+        <div class="ico">🔍</div>
+        <h3>예약 내역을 찾을 수 없습니다</h3>
+        <p>예약번호 또는 휴대폰 번호를 다시 확인해주세요.<br>문의: 02-3672-8558</p>
+      </div>`;
+  } else {
+    const r = json.reservation;
+    let statusPill = '';
+    let guide = '';
+
+    const currentStatus = (r.statusText || '').replace(/\s+/g, '');
+
+    if (currentStatus === '입고완료') {
+      statusPill = `<span class="pill pill-ready">✅ 수령 가능</span>`;
+      guide = '예약하신 제품이 입고되었습니다. </br>편하실 때 방문해주세요.';
+      
+    } else if (currentStatus === '출고완료' || currentStatus === '수령완료') {
+      statusPill = `<span class="pill" style="background:#f0f0f0; color:#666;">📦 수령 완료</span>`;
+      guide = '제품 수령 완료되었습니다. </br>문제가 있을 경우 연락바랍니다.';
+      
+    } else {
+      statusPill = `<span class="pill pill-waiting">⏳ 입고 대기 중</span>`;
+      const waitAhead = Math.max(0, (r.position || 1) - 1);
+      guide = `현재 앞에 <strong>${waitAhead}명</strong> 남아있으며, </br>입고 시 순차적으로 연락드리겠습니다.`;
+    }
+
+    area.innerHTML = `
+      <div class="r-card">
+        <div class="r-head">
+          <div class="r-num">예약번호 ${String(rid).padStart(4,'0')}</div>
+          <div class="r-name">${r.name}님의 예약</div>
+        </div>
+        <div class="r-row"><span class="r-key">용량</span><span class="r-val">${r.dose}mg</span></div>
+        <div class="r-row"><span class="r-key">예약일</span><span class="r-val">${r.date}</span></div>
+        <div class="r-row"><span class="r-key">수량</span><span class="r-val">${r.qty}개</span></div>
+        <div class="r-row"><span class="r-key">상태</span><span class="r-val">${statusPill}</span></div>
+        <div class="r-row"><span class="r-key">안내</span><span class="r-val" style="text-align:right;max-width:60%;font-weight:500;line-height:1.4;">${guide}</span></div>
+      </div>`;
+  }
+  area.classList.add('show');
+}
+
+// ⭐️ 엔터 키 입력 이벤트 (이름 칸에서도 엔터치면 검색되도록 'userName' 추가)
+['userName', 'reservationId', 'phoneDigits'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') doInquiry(); });
+});
+
+// 최초 실행 (화면 렌더링 후 비동기로 데이터 업데이트)
+renderDoseGrid(statusData); 
+fetchStatus();
+setInterval(fetchStatus, 3 * 60 * 1000); // 3분마다 자동 갱신
+</script>
+</body>
+</html>
